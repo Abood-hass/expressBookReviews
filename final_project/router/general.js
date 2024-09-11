@@ -21,27 +21,63 @@ public_users.post("/register", (req, res) => {
 });
 
 // Get the book list available in the shop
-public_users.get("/", function (req, res) {
-  if (booksAry.length == 0)
-    return res.status(404).json({ message: "No Books are Stored" });
+public_users.get("/", function (_, res) {
+  let books;
 
-  return res
-    .status(300)
-    .json({ message: "All the stored Books", data: { books: BOOKS } });
+  async function returnBooks() {
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+
+      books = Object.values(BOOKS);
+
+      return res
+        .status(200)
+        .json({ message: "All the stored Books", data: { books } });
+        
+    } catch (_) {
+      return res.status(500).json({ message: "Error fetching books" });
+    }
+  }
+
+  return returnBooks();
 });
 
 // Get book details based on ISBN
 public_users.get("/isbn/:isbn", function (req, res) {
   const { isbn } = req.params;
 
-  const book = booksAry.find((book) => book.isbn == isbn);
+  const book = new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const book = booksAry.find((book) => book.isbn == isbn);
+      let respon;
 
-  if (book)
-    return res
-      .status(300)
-      .json({ message: `Book with isbn (${isbn}) found`, data: book });
+      if (book)
+        respon = {
+          code: 300,
+          message: `Book with isbn (${isbn}) found`,
+          data: book,
+        };
+      else respon = { code: 404, message: `No book with isbn (${isbn}) found` };
 
-  return res.status(404).json({ message: `No book with isbn (${isbn}) found` });
+      resolve(respon);
+    }, 3000);
+  });
+  // const book = booksAry.find((book) => book.isbn == isbn);
+
+  // if (book)
+  //   return res
+  //     .status(300)
+  //     .json({ message: `Book with isbn (${isbn}) found`, data: book });
+
+  // return res.status(404).json({ message: `No book with isbn (${isbn}) found` });
+
+  return book
+    .catch(() => res.status(400).json({ message: "Somthing Wrong" }))
+    .then((respon) =>
+      res
+        .status(respon.code)
+        .json({ message: respon.message, data: respon.data })
+    );
 });
 
 // Get book details based on author
