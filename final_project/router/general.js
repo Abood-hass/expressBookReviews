@@ -33,7 +33,6 @@ public_users.get("/", function (_, res) {
       return res
         .status(200)
         .json({ message: "All the stored Books", data: { books } });
-        
     } catch (_) {
       return res.status(500).json({ message: "Error fetching books" });
     }
@@ -43,8 +42,9 @@ public_users.get("/", function (_, res) {
 });
 
 // Get book details based on ISBN
-public_users.get("/isbn/:isbn", function (req, res) {
+public_users.get("/isbn/:isbn", async function (req, res) {
   const { isbn } = req.params;
+  let respon;
 
   const book = new Promise((resolve, reject) => {
     setTimeout(() => {
@@ -62,22 +62,14 @@ public_users.get("/isbn/:isbn", function (req, res) {
       resolve(respon);
     }, 3000);
   });
-  // const book = booksAry.find((book) => book.isbn == isbn);
-
-  // if (book)
-  //   return res
-  //     .status(300)
-  //     .json({ message: `Book with isbn (${isbn}) found`, data: book });
-
-  // return res.status(404).json({ message: `No book with isbn (${isbn}) found` });
-
-  return book
-    .catch(() => res.status(400).json({ message: "Somthing Wrong" }))
-    .then((respon) =>
-      res
-        .status(respon.code)
-        .json({ message: respon.message, data: respon.data })
-    );
+  try {
+    respon = await book;
+  } catch {
+    respon = res.status(400).json({ message: "Somthing Wrong" });
+  }
+  return res
+    .status(respon.code)
+    .json({ message: respon.message, data: respon.data });
 });
 
 // Get book details based on author
