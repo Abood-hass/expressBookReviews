@@ -36,7 +36,9 @@ regd_users.post("/login", (req, res) => {
     const token = jwt.sign({ uname: uname }, secretKey, {
       expiresIn: "1h",
     });
-    return res.json({ message: "Valid login", token: token });
+
+    console.log(token);
+    return res.json("Customer Successfully logged in");
   }
 
   return res.status(404).json({ message: "Invalid credentials" });
@@ -49,8 +51,7 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
   const isbn = req.params["isbn"];
 
   const review = { comment, rate };
-
-  const book = Object.entries(BOOKS).find((book) => book[1].isbn == isbn);
+  const book = BOOKS[isbn];
 
   const bookID = Number.parseInt(book["0"]);
   const bookData = book["1"];
@@ -61,23 +62,22 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
     [bookID]: { ...bookData, reviews: { ...bookReviews, [uname]: review } },
   };
 
-  return res.status(300).json({
-    message: "Yet to be implemented",
-    data: { BOOKS },
-  });
+  return res
+    .status(200)
+    .json(`the review for one book with ISBN ${isbn} has been added/updated`);
 });
 
 regd_users.delete("/auth/review/:isbn", (req, res) => {
   const uname = jwt.decode(req.get("token", { complete: true })).uname;
   const isbn = req.params["isbn"];
 
-  const book = Object.entries(BOOKS).find((book) => book[1].isbn == isbn);
+  const book = BOOKS[isbn];
 
   const bookID = Number.parseInt(book["0"]);
   const bookData = book["1"];
   const bookReviews = bookData.reviews;
 
-  console.log(bookReviews)
+  console.log(bookReviews);
 
   delete bookReviews[uname];
 
@@ -86,10 +86,9 @@ regd_users.delete("/auth/review/:isbn", (req, res) => {
     [bookID]: { ...bookData, reviews: bookReviews },
   };
 
-  return res.status(300).json({
-    message: "Yet to be implemented",
-    data: { BOOKS },
-  });
+  return res
+    .status(200)
+    .json(`the review for one book with ISBN ${isbn} has been Deleted`);
 });
 
 module.exports.authenticated = regd_users;
